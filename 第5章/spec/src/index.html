@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>天気検索</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1 class="title">天気検索</h1>
+
+      <section class="panel" aria-label="検索">
+        <form id="searchForm" class="form" novalidate>
+          <label class="label" for="cityInput">都市名</label>
+          <div class="row">
+            <input
+              id="cityInput"
+              name="city"
+              class="input"
+              type="text"
+              inputmode="search"
+              autocomplete="off"
+              placeholder="例：Tokyo"
+            />
+            <button id="searchButton" class="button" type="submit">検索</button>
+          </div>
+        </form>
+
+        <p id="statusText" class="status" role="status" aria-live="polite"></p>
+        <div id="spinner" class="spinner" hidden aria-hidden="true"></div>
+        <p id="errorText" class="error" role="alert" aria-live="assertive"></p>
+      </section>
+
+      <section id="result" class="panel result" aria-label="結果" hidden>
+        <dl class="dl">
+          <div class="dl-row">
+            <dt>都市名</dt>
+            <dd id="resultCity">-</dd>
+          </div>
+          <div class="dl-row">
+            <dt>天気</dt>
+            <dd id="resultWeather">-</dd>
+          </div>
+          <div class="dl-row">
+            <dt>気温（℃）</dt>
+            <dd id="resultTemp">-</dd>
+          </div>
+          <div class="dl-row">
+            <dt>更新時刻</dt>
+            <dd id="resultUpdatedAt">-</dd>
+          </div>
+        </dl>
+      </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

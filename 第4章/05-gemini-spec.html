@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WEBメモアプリ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body class="bg-gray-50 text-gray-800 min-h-screen">
+    <div class="max-w-4xl mx-auto p-4 md:p-8">
+      <header
+        class="mb-8 flex justify-between items-center border-b border-gray-200 pb-4"
+      >
+        <h1 class="text-2xl font-bold text-gray-900">WEBメモアプリ</h1>
+      </header>
+
+      <!-- 通知エリア -->
+      <div id="notification-container" class="mb-6 hidden">
+        <div
+          id="notification-message"
+          class="p-4 rounded-lg text-sm font-medium"
+        ></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 左側：入力フォーム -->
+        <div
+          class="md:col-span-1 bg-white p-4 rounded-xl shadow-xs border border-gray-100 h-fit"
+        >
+          <h2 id="form-title" class="text-lg font-bold mb-4 text-gray-700">
+            新規メモ作成
+          </h2>
+          <form
+            id="memo-form"
+            onsubmit="
+              event.preventDefault();
+              handleSave();
+            "
+          >
+            <input type="hidden" id="memo-id" />
+
+            <div class="mb-4">
+              <label
+                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1"
+                for="title"
+                >タイトル <span class="text-red-500">*</span></label
+              >
+              <input
+                type="text"
+                id="title"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-sm"
+                placeholder="タイトルを入力"
+              />
+            </div>
+
+            <div class="mb-4">
+              <label
+                class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1"
+                for="body"
+                >本文 (最大10,000文字)</label
+              >
+              <textarea
+                id="body"
+                rows="6"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-sm"
+                placeholder="本文を入力"
+              ></textarea>
+              <div class="text-right text-xs text-gray-400 mt-1">
+                <span id="char-count">0</span> / 10,000
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button
+                type="submit"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer text-center"
+              >
+                保存
+              </button>
+              <button
+                type="button"
+                id="cancel-btn"
+                onclick="clearForm()"
+                class="hidden bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer"
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 右側：メモ一覧 -->
+        <div class="md:col-span-2">
+          <h2 class="text-lg font-bold mb-4 text-gray-700">
+            メモ一覧 (<span id="memo-count">0</span>)
+          </h2>
+          <div id="memo-list" class="space-y-3">
+            <!-- JavaScript で動的に生成 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- 定数・仕様定義 ---
+      const STORAGE_KEY = "web-memo-app";
+      const MAX_BODY_LENGTH = 10000;
+
+      // --- 状態管理 ---
+      let state = {
+        memos: [],
+      };
+
+      // --- 通知機能 ---
+      function showNotification(message, isError = true) {
+        const container = document.getElementById("notification-container");
+        const msgEl = document.getElementById("notification-message");
+
+        msgEl.textContent = message;
+        if (isError) {
+          msgEl.className =
+            "p-4 rounded-lg text-sm font-medium bg-red-50 text-red-700 border border-red-200";
+        } else {
+          msgEl.className =
+            "p-4 rounded-lg text-sm font-medium bg-green-50 text-green-700 border border-green-200";
+        }
+        container.classList.remove("hidden");
+      }
+
+      function clearNotification() {
+        const container = document.getElementById("notification-container");
+        container.classList.add("hidden");
+      }
+
+      // --- データ永続化・バリデーション ---
+      function saveToStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.memos));
+        } catch (e) {
+          showNotification(
+            "データの保存に失敗しました。ストレージの容量が不足しているか、プライベートブラウズモードの可能性があります。",
+          );
+        }
+      }
+
+      function loadFromStorage() {
+        const rawData = localStorage.getItem(STORAGE_KEY);
+        if (!rawData) {
+          state.memos = [];
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(rawData);
+
+          // 型バリデーション（想定外のデータの検証）
+          if (!Array.isArray(parsed)) {
+            throw new Error("データ構造が配列ではありません。");
+          }
+
+          const isValid = parsed.every(
+            (item) =>
+              item &&
+              typeof item.id === "string" &&
+              typeof item.title === "string" &&
+              typeof item.body === "string" &&
+              typeof item.updatedAt === "string",
+          );
+
+          if (!isValid) {
+            throw new Error(
+              "データ項目に必要なフィールドが不足しているか、型が不正です。",
+            );
+          }
+
+          state.memos = parsed;
+        } catch (e) {
+          state.memos = [];
+          showNotification(
+            "保存データが破損していたため、空の一覧で起動しました。新しい保存時に上書きされます。",
+          );
+        }
+      }
+
+      // --- アプリケーションロジック ---
+      function render() {
+        const listEl = document.getElementById("memo-list");
+        const countEl = document.getElementById("memo-count");
+
+        countEl.textContent = state.memos.length;
+        listEl.innerHTML = "";
+
+        if (state.memos.length === 0) {
+          listEl.innerHTML =
+            '<div class="text-center py-8 text-gray-400 text-sm bg-white rounded-xl border border-dashed border-gray-200">メモがありません。</div>';
+          return;
+        }
+
+        // 更新日時の降順でソートして表示
+        const sortedMemos = [...state.memos].sort(
+          (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+        );
+
+        sortedMemos.forEach((memo) => {
+          const card = document.createElement("div");
+          card.className =
+            "bg-white p-4 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between transition-all hover:shadow-md";
+
+          const dateStr = new Date(memo.updatedAt).toLocaleString("ja-JP");
+
+          card.innerHTML = `
+          <div class="mb-3">
+            <div class="flex justify-between items-start gap-2">
+              <h3 class="font-bold text-gray-900 break-all">${escapeHtml(memo.title)}</h3>
+              <span class="text-xs text-gray-400 shrink-0">${dateStr}</span>
+            </div>
+            <p class="text-gray-600 text-sm mt-2 whitespace-pre-wrap break-all">${escapeHtml(memo.body)}</p>
+          </div>
+          <div class="flex justify-end gap-2 border-t border-gray-100 pt-3 mt-1">
+            <button onclick="editMemo('${memo.id}')" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 cursor-pointer">編集</button>
+            <button onclick="deleteMemo('${memo.id}')" class="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded hover:bg-red-50 cursor-pointer">削除</button>
+          </div>
+        `;
+          listEl.appendChild(card);
+        });
+      }
+
+      function handleSave() {
+        clearNotification();
+
+        const idEl = document.getElementById("memo-id");
+        const titleEl = document.getElementById("title");
+        const bodyEl = document.getElementById("body");
+
+        const id = idEl.value;
+        const title = titleEl.value.trim();
+        const body = bodyEl.value;
+
+        // バリデーション: タイトル空欄拒否
+        if (!title) {
+          showNotification("タイトルを入力してください。");
+          return;
+        }
+
+        // バリデーション: 本文最大文字数制限
+        if (body.length > MAX_BODY_LENGTH) {
+          showNotification(
+            `本文が最大文字数(${MAX_BODY_LENGTH}文字)を超えています。`,
+          );
+          return;
+        }
+
+        const now = new Date().toISOString();
+
+        if (id) {
+          // 編集保存
+          const index = state.memos.findIndex((m) => m.id === id);
+          if (index !== -1) {
+            state.memos[index] = {
+              ...state.memos[index],
+              title: title,
+              body: body,
+              updatedAt: now,
+            };
+          }
+        } else {
+          // 新規作成
+          const newMemo = {
+            id: crypto.randomUUID(),
+            title: title,
+            body: body,
+            updatedAt: now,
+          };
+          state.memos.push(newMemo);
+        }
+
+        saveToStorage();
+        clearForm();
+        render();
+      }
+
+      function editMemo(id) {
+        clearNotification();
+        const memo = state.memos.find((m) => m.id === id);
+        if (!memo) return;
+
+        document.getElementById("memo-id").value = memo.id;
+        document.getElementById("title").value = memo.title;
+        document.getElementById("body").value = memo.body;
+
+        document.getElementById("form-title").textContent = "メモを編集";
+        document.getElementById("cancel-btn").classList.remove("hidden");
+
+        updateCharCount();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function deleteMemo(id) {
+        clearNotification();
+        state.memos = state.memos.filter((m) => m.id !== id);
+        saveToStorage();
+
+        // 編集中だったメモを削除した場合はフォームをクリア
+        if (document.getElementById("memo-id").value === id) {
+          clearForm();
+        }
+
+        render();
+      }
+
+      function clearForm() {
+        document.getElementById("memo-id").value = "";
+        document.getElementById("memo-form").reset();
+        document.getElementById("form-title").textContent = "新規メモ作成";
+        document.getElementById("cancel-btn").classList.add("hidden");
+        updateCharCount();
+      }
+
+      function updateCharCount() {
+        const bodyEl = document.getElementById("body");
+        const countEl = document.getElementById("char-count");
+        countEl.textContent = bodyEl.value.length;
+
+        if (bodyEl.value.length > MAX_BODY_LENGTH) {
+          countEl.classList.add("text-red-500", "font-bold");
+        } else {
+          countEl.classList.remove("text-red-500", "font-bold");
+        }
+      }
+
+      function escapeHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#33;");
+      }
+
+      // --- 初期化処理 ---
+      document
+        .getElementById("body")
+        .addEventListener("input", updateCharCount);
+
+      // 起動
+      loadFromStorage();
+      render();
+    </script>
+  </body>
+</html>

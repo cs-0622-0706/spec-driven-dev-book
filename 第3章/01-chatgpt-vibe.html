@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ToDoリスト</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 500px;
+        margin: 50px auto;
+      }
+      input {
+        width: 70%;
+        padding: 8px;
+      }
+      button {
+        padding: 8px 12px;
+      }
+      li {
+        margin: 10px 0;
+        display: flex;
+        justify-content: space-between;
+      }
+      .done {
+        text-decoration: line-through;
+        color: gray;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ToDoリスト</h1>
+    <p>未完了: <span id="count">0</span> 件</p>
+
+    <input type="text" id="taskInput" placeholder="やることを入力" />
+    <button onclick="addTask()">追加</button>
+
+    <ul id="taskList"></ul>
+
+    <script>
+      let todos = [];
+
+      function addTask() {
+        const input = document.getElementById("taskInput");
+        const text = input.value.trim();
+        if (text === "") return;
+        todos.push({ text: text, done: false });
+        renderTasks();
+        input.value = "";
+      }
+
+      function renderTasks() {
+        const ul = document.getElementById("taskList");
+        ul.innerHTML = "";
+        todos.forEach(function (todo, i) {
+          const li = document.createElement("li");
+
+          const span = document.createElement("span");
+          span.textContent = todo.text;
+          if (todo.done) span.classList.add("done");
+          span.onclick = function () {
+            todos[i].done = !todos[i].done;
+            span.classList.toggle("done");
+          };
+
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "削除";
+          delBtn.onclick = function () {
+            todos.splice(i, 1);
+            li.remove();
+            updateCount();
+          };
+
+          li.appendChild(span);
+          li.appendChild(delBtn);
+          ul.appendChild(li);
+        });
+        updateCount();
+      }
+
+      function updateCount() {
+        const remaining = todos.filter(function (t) {
+          return !t.done;
+        }).length;
+        document.getElementById("count").textContent = remaining;
+      }
+    </script>
+  </body>
+</html>

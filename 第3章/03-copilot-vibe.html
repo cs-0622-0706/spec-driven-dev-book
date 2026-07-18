@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ToDoアプリ</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 500px;
+        margin: 40px auto;
+      }
+      input {
+        width: 70%;
+        padding: 8px;
+      }
+      button {
+        padding: 8px 12px;
+      }
+      ul {
+        padding: 0;
+      }
+      li {
+        list-style: none;
+        padding: 6px 0;
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ToDoアプリ</h1>
+
+    <input id="todoInput" placeholder="やることを入力" />
+    <button onclick="addTodo()">追加</button>
+
+    <ul id="todoList"></ul>
+
+    <script>
+      const input = document.getElementById("todoInput");
+      const list = document.getElementById("todoList");
+
+      let todos = [];
+
+      function addTodo() {
+        const text = input.value.trim();
+        if (!text) return;
+        todos.push(text);
+        renderTodos();
+        input.value = "";
+      }
+
+      function renderTodos() {
+        list.innerHTML = "";
+        todos.forEach(function (text, i) {
+          const li = document.createElement("li");
+          li.innerHTML = `
+          <span>${text}</span>
+          <button onclick="deleteTodo(${i})">削除</button>
+        `;
+          list.appendChild(li);
+        });
+      }
+
+      function deleteTodo(i) {
+        todos.splice(i, 1);
+        list.children[i].remove();
+      }
+    </script>
+  </body>
+</html>

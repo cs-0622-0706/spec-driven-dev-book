@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数当てゲーム</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body
+    class="bg-gray-100 flex items-center justify-center min-h-screen font-sans"
+  >
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+      <h1 class="text-2xl font-bold text-gray-800 mb-6">数当てゲーム</h1>
+      <p class="text-gray-600 mb-6">1〜100 の整数を当ててください。</p>
+
+      <!-- ゲームプレイエリア -->
+      <div id="game-area">
+        <div class="flex gap-2 mb-4">
+          <input
+            type="number"
+            id="guess-input"
+            min="1"
+            max="100"
+            placeholder="1〜100の数"
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+          />
+          <button
+            id="submit-btn"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors"
+          >
+            送信
+          </button>
+        </div>
+      </div>
+
+      <!-- 結果・ヒント表示エリア -->
+      <div
+        id="result-message"
+        class="text-lg font-medium text-gray-700 min-h-[2rem] my-4"
+      >
+        <!-- メッセージがここに動的挿入されます -->
+      </div>
+
+      <!-- リセットボタン（最初は非表示、正解時に強調、通常時も下部に配置） -->
+      <div class="mt-6">
+        <button
+          id="reset-btn"
+          class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-4 py-2 rounded-lg transition-colors text-sm w-full"
+        >
+          ゲームをリセット
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // 状態管理
+      let answer = 0;
+      let attempts = 0;
+      let isGameOver = false;
+
+      // DOM要素の取得
+      const guessInput = document.getElementById("guess-input");
+      const submitBtn = document.getElementById("submit-btn");
+      const resultMessage = document.getElementById("result-message");
+      const resetBtn = document.getElementById("reset-btn");
+
+      // ゲームの初期化・リセット
+      function initGame() {
+        // 1〜100の整数をランダムに生成
+        answer = Math.floor(Math.random() * 100) + 1;
+        attempts = 0;
+        isGameOver = false;
+
+        // UIの初期化
+        guessInput.value = "";
+        guessInput.disabled = false;
+        submitBtn.disabled = false;
+        submitBtn.className =
+          "bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors";
+        resultMessage.textContent = "新しいゲームが始まりました。";
+        resultMessage.className =
+          "text-lg font-medium text-blue-600 min-h-[2rem] my-4";
+
+        // デバッグ・テスト用（AC検証用にコンソールで正解を確認可能）
+        console.log(`[Debug] 正解: ${answer}`);
+      }
+
+      // 送信処理
+      function handleGuess() {
+        if (isGameOver) return;
+
+        const inputValue = guessInput.value.trim();
+        const guess = parseInt(inputValue, 10);
+
+        // 無効入力のバリデーション（ゲームを終了させない）
+        if (inputValue === "" || isNaN(guess) || guess < 1 || guess > 100) {
+          resultMessage.textContent = "1〜100の有効な整数を入力してください。";
+          resultMessage.className =
+            "text-lg font-medium text-red-500 min-h-[2rem] my-4";
+          return;
+        }
+
+        // 試行回数のインクリメント
+        attempts++;
+
+        // 判定（SPECの文言をそのまま使用）
+        if (guess < answer) {
+          // AC-01
+          resultMessage.textContent = "もっと大きいです";
+          resultMessage.className =
+            "text-lg font-medium text-amber-600 min-h-[2rem] my-4";
+          guessInput.value = "";
+          guessInput.focus();
+        } else if (guess > answer) {
+          // AC-02
+          resultMessage.textContent = "もっと小さいです";
+          resultMessage.className =
+            "text-lg font-medium text-amber-600 min-h-[2rem] my-4";
+          guessInput.value = "";
+          guessInput.focus();
+        } else {
+          // AC-04
+          resultMessage.innerHTML = `正解です！<br><span class="text-sm text-gray-500">試行回数: <span class="font-bold text-gray-800">${attempts}</span></span>`;
+          resultMessage.className =
+            "text-xl font-bold text-green-600 min-h-[2rem] my-4";
+          endGame();
+        }
+      }
+
+      // ゲーム終了処理
+      function endGame() {
+        isGameOver = true;
+        guessInput.disabled = true;
+        submitBtn.disabled = true;
+        submitBtn.className =
+          "bg-gray-300 text-gray-500 font-semibold px-6 py-2 rounded-lg cursor-not-allowed";
+
+        // リセットボタンを目立たせる
+        resetBtn.className =
+          "bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm w-full shadow-md";
+      }
+
+      // イベントリスナーの登録
+      submitBtn.addEventListener("click", handleGuess);
+
+      // Enterキーでも送信できるようにする
+      guessInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          handleGuess();
+        }
+      });
+
+      resetBtn.addEventListener("click", initGame);
+
+      // ページ読み込み時にゲームを開始
+      window.addEventListener("DOMContentLoaded", initGame);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>じゃんけんゲーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md text-center">
+      <h1 class="text-3xl font-bold mb-8">じゃんけんゲーム</h1>
+
+      <!-- 手選択エリア -->
+      <div id="selectionArea" class="space-y-3">
+        <button
+          class="w-full py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600"
+          onclick="play('rock')"
+        >
+          ✊ グー
+        </button>
+
+        <button
+          class="w-full py-3 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600"
+          onclick="play('scissors')"
+        >
+          ✌️ チョキ
+        </button>
+
+        <button
+          class="w-full py-3 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600"
+          onclick="play('paper')"
+        >
+          ✋ パー
+        </button>
+      </div>
+
+      <!-- 結果エリア -->
+      <div id="resultArea" class="hidden space-y-6">
+        <div class="flex justify-center gap-10">
+          <div>
+            <div id="playerHand" class="text-4xl"></div>
+          </div>
+
+          <div>
+            <div id="cpuHand" class="text-4xl"></div>
+          </div>
+        </div>
+
+        <div id="result" class="text-3xl font-bold"></div>
+
+        <button
+          onclick="resetGame()"
+          class="bg-gray-700 text-white px-6 py-2 rounded-lg hover:bg-gray-800"
+        >
+          再戦
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const hands = {
+        rock: {
+          label: "グー",
+          emoji: "✊",
+        },
+        scissors: {
+          label: "チョキ",
+          emoji: "✌️",
+        },
+        paper: {
+          label: "パー",
+          emoji: "✋",
+        },
+      };
+
+      function judge(player, cpu) {
+        if (player === cpu) return "あいこ";
+
+        if (
+          (player === "rock" && cpu === "scissors") ||
+          (player === "scissors" && cpu === "paper") ||
+          (player === "paper" && cpu === "rock")
+        ) {
+          return "勝ち";
+        }
+
+        return "負け";
+      }
+
+      function play(playerChoice) {
+        const cpuChoices = ["rock", "scissors", "paper"];
+        const cpuChoice =
+          cpuChoices[Math.floor(Math.random() * cpuChoices.length)];
+
+        document.getElementById("selectionArea").classList.add("hidden");
+        document.getElementById("resultArea").classList.remove("hidden");
+
+        document.getElementById("playerHand").textContent =
+          `${hands[playerChoice].emoji} ${hands[playerChoice].label}`;
+
+        document.getElementById("cpuHand").textContent =
+          `${hands[cpuChoice].emoji} ${hands[cpuChoice].label}`;
+
+        document.getElementById("result").textContent = judge(
+          playerChoice,
+          cpuChoice,
+        );
+      }
+
+      function resetGame() {
+        document.getElementById("result").textContent = "";
+        document.getElementById("playerHand").textContent = "";
+        document.getElementById("cpuHand").textContent = "";
+
+        document.getElementById("resultArea").classList.add("hidden");
+        document.getElementById("selectionArea").classList.remove("hidden");
+      }
+    </script>
+  </body>
+</html>

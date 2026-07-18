@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ToDoアプリ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 text-gray-800 min-h-screen py-8">
+    <div class="max-w-md mx-auto bg-white shadow-md rounded-lg p-6">
+      <h1 class="text-2xl font-bold mb-6 text-center text-gray-900">
+        ToDoアプリ
+      </h1>
+
+      <form id="todo-form" class="mb-4">
+        <div class="flex gap-2">
+          <input
+            type="text"
+            id="todo-input"
+            placeholder="タスクを入力してください"
+            class="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition"
+          >
+            追加
+          </button>
+        </div>
+        <p id="error-message" class="text-red-500 text-sm mt-2 hidden"></p>
+      </form>
+
+      <div class="mb-4 text-sm text-gray-600 font-medium">
+        未完了件数:
+        <span id="incomplete-count" class="text-base font-bold text-blue-600"
+          >0</span
+        >
+      </div>
+
+      <ul id="todo-list" class="divide-y divide-gray-200"></ul>
+    </div>
+
+    <script>
+      // --- 状態管理 (State) ---
+      let tasks = [];
+
+      // --- DOM要素の取得 ---
+      const form = document.getElementById("todo-form");
+      const input = document.getElementById("todo-input");
+      const errorMessage = document.getElementById("error-message");
+      const incompleteCountEl = document.getElementById("incomplete-count");
+      const todoList = document.getElementById("todo-list");
+
+      // --- 描画関数 (Render) ---
+      function render() {
+        // 1. 未完了件数の再計算と表示
+        const incompleteCount = tasks.filter((task) => !task.done).length;
+        incompleteCountEl.textContent = incompleteCount;
+
+        // 2. タスク一覧の描画 (一覧の一番下に追加される並び)
+        todoList.innerHTML = "";
+
+        tasks.forEach((task) => {
+          const li = document.createElement("li");
+          li.className = "flex items-center justify-between py-3 gap-2";
+          li.dataset.id = task.id;
+
+          // 左側: チェックボックスとタイトル
+          const leftDiv = document.createElement("div");
+          leftDiv.className = "flex items-center gap-3 flex-1 min-w-0";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = task.done;
+          checkbox.className =
+            "h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer";
+          checkbox.addEventListener("change", () => toggleTask(task.id));
+
+          const span = document.createElement("span");
+          span.textContent = task.title;
+          span.className = `break-all ${task.done ? "line-through text-gray-400" : "text-gray-800"}`;
+
+          leftDiv.appendChild(checkbox);
+          leftDiv.appendChild(span);
+
+          // 右側: 削除ボタン
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "削除";
+          deleteBtn.className =
+            "text-sm bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded transition shrink-0";
+          deleteBtn.addEventListener("click", () => deleteTask(task.id));
+
+          li.appendChild(leftDiv);
+          li.appendChild(deleteBtn);
+          todoList.appendChild(li);
+        });
+      }
+
+      // --- 操作関数 (Actions) ---
+
+      // エラー表示の制御
+      function showImgError(msg) {
+        errorMessage.textContent = msg;
+        errorMessage.classList.remove("hidden");
+      }
+      function clearError() {
+        errorMessage.textContent = "";
+        errorMessage.classList.add("hidden");
+      }
+
+      // 追加
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const title = input.value;
+
+        // バリデーション
+        if (!title || title.trim() === "") {
+          showImgError("エラー: 空白のみ、または空のタスクは追加できません。");
+          return;
+        }
+        if (title.length > 100) {
+          showImgError("エラー: 100文字を超えるタスクは追加できません。");
+          return;
+        }
+
+        // 正常系データ作成 (末尾追加)
+        const newTask = {
+          id: crypto.randomUUID(),
+          title: title,
+          done: false,
+          createdAt: new Date(),
+        };
+
+        tasks.push(newTask);
+
+        // 状態遷移表に基づくUIクリア
+        input.value = "";
+        clearError();
+
+        render();
+      });
+
+      // 完了切替
+      function toggleTask(id) {
+        tasks = tasks.map((task) => {
+          if (task.id === id) {
+            return { ...task, done: !task.done };
+          }
+          return task;
+        });
+        render();
+      }
+
+      // 削除
+      function deleteTask(id) {
+        tasks = tasks.filter((task) => task.id !== id);
+        render();
+      }
+
+      // 初期描画
+      render();
+    </script>
+  </body>
+</html>

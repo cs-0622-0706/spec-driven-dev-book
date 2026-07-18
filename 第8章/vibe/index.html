@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ログイン | Sample8</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <div class="card">
+        <h1>ログイン</h1>
+        <p class="sub">保護ページに進むには認証が必要です。</p>
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="username">ユーザー名</label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              autocomplete="username"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="password">パスワード</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+          <button type="submit" class="btn">ログイン</button>
+        </form>
+        <div id="login-error" class="error hidden" role="alert"></div>
+        <p class="hint">
+          デモ用: ユーザー名 <strong>demo</strong> / パスワード <strong>demo</strong>
+        </p>
+      </div>
+    </div>
+    <script src="js/auth.js"></script>
+    <script>
+      (function () {
+        if (window.Sample8Auth.redirectIfAuthed("protected.html")) {
+          return;
+        }
+        var form = document.getElementById("login-form");
+        var errorEl = document.getElementById("login-error");
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          errorEl.classList.add("hidden");
+          var user = document.getElementById("username").value.trim();
+          var pass = document.getElementById("password").value;
+          if (user === "demo" && pass === "demo") {
+            window.Sample8Auth.setLoggedIn(true);
+            window.location.replace("protected.html");
+          } else {
+            errorEl.textContent =
+              "ユーザー名またはパスワードが正しくありません。";
+            errorEl.classList.remove("hidden");
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

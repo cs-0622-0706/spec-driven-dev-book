@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数当てゲーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
+      <h1 class="text-3xl font-bold text-center mb-6">数当てゲーム</h1>
+
+      <p class="text-gray-700 mb-4">1〜100 の整数を当ててください。</p>
+
+      <div class="flex gap-2 mb-4">
+        <input
+          id="guessInput"
+          type="number"
+          min="1"
+          max="100"
+          placeholder="1〜100"
+          class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          id="submitButton"
+          class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+        >
+          送信
+        </button>
+      </div>
+
+      <div class="flex justify-end mb-4">
+        <button
+          id="resetButton"
+          class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+        >
+          リセット
+        </button>
+      </div>
+
+      <div
+        id="message"
+        class="text-lg font-semibold text-center min-h-[2rem]"
+      ></div>
+
+      <div id="attempts" class="text-center text-gray-600 mt-2"></div>
+    </div>
+
+    <script>
+      let answer = generateAnswer();
+      let trialCount = 0;
+      let gameEnded = false;
+
+      const guessInput = document.getElementById("guessInput");
+      const submitButton = document.getElementById("submitButton");
+      const resetButton = document.getElementById("resetButton");
+      const message = document.getElementById("message");
+      const attempts = document.getElementById("attempts");
+
+      function generateAnswer() {
+        return Math.floor(Math.random() * 100) + 1;
+      }
+
+      function resetGame() {
+        answer = generateAnswer();
+        trialCount = 0;
+        gameEnded = false;
+
+        message.textContent = "";
+        attempts.textContent = "";
+        guessInput.value = "";
+
+        guessInput.disabled = false;
+        submitButton.disabled = false;
+      }
+
+      function handleGuess() {
+        if (gameEnded) {
+          return;
+        }
+
+        const value = guessInput.value.trim();
+
+        if (value === "") {
+          message.textContent = "1〜100 の整数を入力してください";
+          return;
+        }
+
+        const guess = Number(value);
+
+        if (!Number.isInteger(guess) || guess < 1 || guess > 100) {
+          message.textContent = "1〜100 の整数を入力してください";
+          guessInput.value = "";
+          return;
+        }
+
+        trialCount++;
+
+        if (guess < answer) {
+          message.textContent = "もっと大きいです";
+        } else if (guess > answer) {
+          message.textContent = "もっと小さいです";
+        } else {
+          message.textContent = "正解です！";
+          attempts.textContent = `試行回数: ${trialCount}`;
+
+          gameEnded = true;
+          guessInput.disabled = true;
+          submitButton.disabled = true;
+        }
+
+        guessInput.value = "";
+        guessInput.focus();
+      }
+
+      submitButton.addEventListener("click", handleGuess);
+
+      guessInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          handleGuess();
+        }
+      });
+
+      resetButton.addEventListener("click", resetGame);
+    </script>
+  </body>
+</html>

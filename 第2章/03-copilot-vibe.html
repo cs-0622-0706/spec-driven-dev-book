@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>じゃんけんゲーム</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        margin-top: 50px;
+      }
+      button {
+        margin: 5px;
+        padding: 10px 20px;
+        font-size: 16px;
+      }
+      #result,
+      #score {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>じゃんけんゲーム</h1>
+    <p>出す手を選んでね：</p>
+    <button onclick="play('グー')">グー</button>
+    <button onclick="play('チョキ')">チョキ</button>
+    <button onclick="play('パー')">パー</button>
+
+    <div id="result"></div>
+    <div id="score"></div>
+
+    <script>
+      const hands = ["グー", "チョキ", "パー"];
+      let win = 0,
+        lose = 0,
+        draw = 0;
+
+      function judge(player, cpu) {
+        if (player === cpu) return "引き分け";
+        if (
+          (player === "グー" && cpu === "チョキ") ||
+          (player === "チョキ" && cpu === "パー") ||
+          (player === "パー" && cpu === "グー")
+        )
+          return "勝ち";
+        return "負け";
+      }
+
+      function play(playerHand) {
+        const cpuHand = hands[Math.floor(Math.random() * hands.length)];
+        const result = judge(playerHand, cpuHand);
+
+        if (result === "勝ち") win++;
+        else if (result === "負け") lose++;
+        else draw++;
+
+        document.getElementById("result").textContent =
+          `あなた：${playerHand}　コンピュータ：${cpuHand}　→　結果：${result}`;
+        document.getElementById("score").textContent =
+          `勝ち：${win}　負け：${lose}　引き分け：${draw}`;
+      }
+    </script>
+  </body>
+</html>

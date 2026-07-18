@@ -1,0 +1,15 @@
+/* 仕様上 Tailwind CDN を併用。ここは最小限の補助スタイルのみ */
+
+#result-table tbody tr {
+  border-bottom: 1px solid rgb(226 232 240);
+}
+
+#result-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+#result-table tbody td {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  vertical-align: top;
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>リンク抽出テスト用サンプル</title>
+</head>
+<body>
+  <h1>リンク抽出テスト用サンプル</h1>
+  <p>このファイルは、spec と vibe の挙動の違いを検証するための HTML です。</p>
+
+  <h2>1. 相対 URL のリンク</h2>
+  <p>spec では Base URL を入力することで絶対 URL に正規化されますが、vibe ではデフォルトで除外されます（http(s) のみフィルタのため）。</p>
+  <ul>
+    <li><a href="/articles/101">相対 URL の記事 101</a></li>
+    <li><a href="about.html">相対 URL の記事 about</a></li>
+  </ul>
+
+  <h2>2. テキストが空のリンク</h2>
+  <p>spec では要件どおり除外されますが、vibe では「(リンクテキストなし)」として抽出されます。</p>
+  <ul>
+    <li><a href="https://example.com/empty-text">   </a></li>
+    <li><a href="https://example.com/image-link"><img src="dummy.jpg" alt=""></a></li>
+  </ul>
+
+  <h2>3. ハッシュ（#）違いのリンク</h2>
+  <p>spec では完全一致で重複排除するため両方抽出されますが、vibe ではハッシュを切り捨てるため 1 件に統合（重複排除）されてしまいます。</p>
+  <ul>
+    <li><a href="https://example.com/document#section1">ドキュメント セクション1</a></li>
+    <li><a href="https://example.com/document#section2">ドキュメント セクション2</a></li>
+  </ul>
+
+  <h2>4. 正常な絶対 URL のリンク</h2>
+  <p>どちらの実装でも正常に抽出されます。</p>
+  <ul>
+    <li><a href="https://example.com/normal/1">正常なリンク 1</a></li>
+    <li><a href="https://example.com/normal/2">正常なリンク 2</a></li>
+    <li><a href="https://example.com/normal/1">正常なリンク 1（重複テスト用）</a></li>
+  </ul>
+</body>
+</html>

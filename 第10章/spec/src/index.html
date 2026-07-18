@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>記事リンク抽出</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="layout">
+    <h1 class="title">記事リンク抽出</h1>
+    <p class="lead">HTML を貼り付けるか、ローカルファイルを選んでください。ブラウザ内のみで処理します。</p>
+
+    <section class="panel" aria-labelledby="input-heading">
+      <h2 id="input-heading" class="section-title">入力</h2>
+      <label class="field">
+        <span class="label">HTML</span>
+        <textarea id="html-input" class="textarea" rows="12" placeholder="&lt;html&gt;...&lt;/html&gt;"></textarea>
+      </label>
+      <label class="field">
+        <span class="label">HTML ファイル</span>
+        <input id="html-file" type="file" accept=".html,.htm,text/html" />
+      </label>
+      <label class="field">
+        <span class="label">baseUrl（相対 URL の解決用）</span>
+        <input id="base-url" class="input" type="text" placeholder="https://example.com/path/" autocomplete="url" />
+      </label>
+      <button id="extract-btn" type="button" class="btn btn-primary">抽出</button>
+    </section>
+
+    <section class="panel" aria-labelledby="result-heading">
+      <h2 id="result-heading" class="section-title">結果</h2>
+      <p id="result-count" class="result-count" aria-live="polite">未抽出です。「抽出」を押してください。</p>
+      <div class="table-wrap">
+        <table class="result-table" id="result-table" hidden>
+          <thead>
+            <tr>
+              <th scope="col">title</th>
+              <th scope="col">url</th>
+            </tr>
+          </thead>
+          <tbody id="result-body"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button id="save-json" type="button" class="btn" disabled>JSON で保存</button>
+        <button id="save-csv" type="button" class="btn" disabled>CSV で保存</button>
+      </div>
+    </section>
+  </main>
+  <script src="app.js" defer></script>
+</body>
+</html>

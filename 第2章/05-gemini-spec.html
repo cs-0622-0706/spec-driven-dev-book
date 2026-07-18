@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>じゃんけんゲーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md text-center">
+      <h1 class="text-2xl font-bold mb-6 text-gray-800">じゃんけんゲーム</h1>
+
+      <div id="selection-area" class="block">
+        <p class="text-gray-600 mb-4">自分の手を選んでください</p>
+        <div class="flex flex-col gap-3">
+          <button
+            onclick="play('✊ グー')"
+            class="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-lg border border-indigo-200 transition"
+          >
+            ✊ グー
+          </button>
+          <button
+            onclick="play('✌️ チョキ')"
+            class="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-lg border border-indigo-200 transition"
+          >
+            ✌️ チョキ
+          </button>
+          <button
+            onclick="play('✋ パー')"
+            class="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-lg border border-indigo-200 transition"
+          >
+            ✋ パー
+          </button>
+        </div>
+      </div>
+
+      <div id="result-area" class="hidden">
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <p class="text-xs text-gray-500 mb-1">あなた</p>
+            <p id="player-hand" class="text-lg font-semibold text-gray-700"></p>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <p class="text-xs text-gray-500 mb-1">CPU</p>
+            <p id="cpu-hand" class="text-lg font-semibold text-gray-700"></p>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <p id="game-judge" class="text-3xl font-black tracking-wider"></p>
+        </div>
+
+        <button
+          onclick="resetGame()"
+          class="w-full py-3 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition"
+        >
+          再戦
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // 手の定義
+      const hands = ["✊ グー", "✌️ チョキ", "✋ パー"];
+
+      // 要素の取得
+      const selectionArea = document.getElementById("selection-area");
+      const resultArea = document.getElementById("result-area");
+      const playerHandEl = document.getElementById("player-hand");
+      const cpuHandEl = document.getElementById("cpu-hand");
+      const gameJudgeEl = document.getElementById("game-judge");
+
+      // 勝敗判定ロジック
+      function judge(player, cpu) {
+        if (player === cpu) return "あいこ";
+
+        if (
+          (player === "✊ グー" && cpu === "✌️ チョキ") ||
+          (player === "✌️ チョキ" && cpu === "✋ パー") ||
+          (player === "✋ パー" && cpu === "✊ グー")
+        ) {
+          return "勝ち";
+        }
+
+        return "負け";
+      }
+
+      // じゃんけん実行
+      function play(playerHand) {
+        // CPUの手をランダムに決定
+        const randomIndex = Math.floor(Math.random() * 3);
+        const cpuHand = hands[randomIndex];
+
+        // 勝敗を判定
+        const result = judge(playerHand, cpuHand);
+
+        // 結果画面にテキストを設定
+        playerHandEl.textContent = playerHand;
+        cpuHandEl.textContent = cpuHand;
+        gameJudgeEl.textContent = result;
+
+        // 勝敗に応じた文字色の装飾（見た目の微調整）
+        if (result === "勝ち") {
+          gameJudgeEl.className =
+            "text-3xl font-black tracking-wider text-rose-600";
+        } else if (result === "負け") {
+          gameJudgeEl.className =
+            "text-3xl font-black tracking-wider text-blue-600";
+        } else {
+          gameJudgeEl.className =
+            "text-3xl font-black tracking-wider text-gray-600";
+        }
+
+        // 表示エリアの切り替え (AC-04)
+        selectionArea.classList.replace("block", "hidden");
+        resultArea.classList.replace("hidden", "block");
+      }
+
+      // 再戦処理
+      function resetGame() {
+        // 内部テキストのクリア (AC-02: 前回の勝敗表示を消す)
+        playerHandEl.textContent = "";
+        cpuHandEl.textContent = "";
+        gameJudgeEl.textContent = "";
+
+        // 表示エリアを初期状態に戻す
+        resultArea.classList.replace("block", "hidden");
+        selectionArea.classList.replace("hidden", "block");
+      }
+    </script>
+  </body>
+</html>

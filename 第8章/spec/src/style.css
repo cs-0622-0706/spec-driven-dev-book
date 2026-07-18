@@ -1,0 +1,5 @@
+/* 第8章 spec/src — Tailwind 補助 */
+
+[hidden] {
+  display: none !important;
+}

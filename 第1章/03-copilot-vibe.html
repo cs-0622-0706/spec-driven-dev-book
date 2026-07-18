@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>数当てゲーム（1〜100）</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .game {
+        background: #fff;
+        padding: 24px 28px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        max-width: 360px;
+        width: 100%;
+      }
+      h1 {
+        font-size: 20px;
+        margin-top: 0;
+        text-align: center;
+      }
+      p {
+        margin: 8px 0;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      input[type="number"] {
+        flex: 1;
+        padding: 8px;
+        font-size: 16px;
+      }
+      button {
+        padding: 8px 12px;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 6px;
+        border: none;
+        background: #0078d4;
+        color: #fff;
+      }
+      button:disabled {
+        background: #aaa;
+        cursor: default;
+      }
+      #message {
+        margin-top: 12px;
+        min-height: 1.5em;
+        font-weight: bold;
+      }
+      #count {
+        font-size: 13px;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game">
+      <h1>数当てゲーム</h1>
+      <p>1〜100 の整数を当ててください。</p>
+      <p>ヒント：大きい / 小さい を教えてくれます。</p>
+
+      <div class="row">
+        <input
+          id="guessInput"
+          type="number"
+          min="1"
+          max="100"
+          placeholder="1〜100"
+        />
+        <button id="btnGuess">予想</button>
+      </div>
+
+      <div class="row" style="margin-top: 8px">
+        <button id="btnReset">リセット</button>
+      </div>
+
+      <p id="message">さあ、数字を入力してみよう。</p>
+      <p id="count"></p>
+    </div>
+
+    <script>
+      // 1〜100 の乱数を生成
+      function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      const guessInput = document.getElementById("guessInput");
+      const btnGuess = document.getElementById("btnGuess");
+      const btnReset = document.getElementById("btnReset");
+      const message = document.getElementById("message");
+      const count = document.getElementById("count");
+
+      let answer = getRandomInt(1, 100);
+      let tryCount = 0;
+      let isGameOver = false;
+
+      function setGameOver(state) {
+        isGameOver = state;
+        guessInput.disabled = state;
+        btnGuess.disabled = state;
+      }
+
+      btnGuess.addEventListener("click", function () {
+        if (isGameOver) return;
+
+        const guess = Number(guessInput.value);
+
+        // 入力チェック
+        if (!guess || guess < 1 || guess > 100) {
+          message.textContent = "1〜100 の整数を入力してください。";
+          message.style.color = "red";
+          return;
+        }
+
+        tryCount += 1;
+        count.textContent = tryCount + " 回目の挑戦";
+
+        if (guess < answer) {
+          message.textContent = "もっと大きい数字です。";
+          message.style.color = "royalblue";
+        } else if (guess > answer) {
+          message.textContent = "もっと小さい数字です。";
+          message.style.color = "royalblue";
+        } else {
+          message.textContent = "正解！ " + tryCount + " 回で当てました 🎉";
+          message.style.color = "green";
+          setGameOver(true);
+        }
+
+        guessInput.value = "";
+        guessInput.focus();
+      });
+
+      btnReset.addEventListener("click", function () {
+        answer = getRandomInt(1, 100);
+        tryCount = 0;
+        isGameOver = false;
+
+        message.textContent = "新しいゲームです。もう一度挑戦してみよう。";
+        message.style.color = "black";
+        count.textContent = "";
+        guessInput.value = "";
+        setGameOver(false);
+        guessInput.focus();
+      });
+    </script>
+  </body>
+</html>

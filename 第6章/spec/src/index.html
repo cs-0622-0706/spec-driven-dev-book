@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>地域サンプル法律事務所</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="bg-gray-50 text-gray-900 font-sans leading-relaxed text-base">
+    <header class="site-header bg-white border-b sticky top-0 z-50">
+      <nav
+        class="site-nav max-w-4xl mx-auto px-4 py-4 flex justify-between items-center gap-3"
+        aria-label="主要ナビゲーション"
+      >
+        <div class="site-brand text-base sm:text-xl font-bold text-slate-800 min-w-0">
+          地域サンプル法律事務所
+        </div>
+
+        <button
+          type="button"
+          id="menu-toggle"
+          class="menu-toggle p-2 rounded-md border border-gray-300 text-slate-800 shrink-0"
+          aria-expanded="false"
+          aria-controls="nav-links"
+          aria-label="メニューを開く"
+        >
+          <span class="menu-icon" aria-hidden="true"></span>
+        </button>
+
+        <ul id="nav-links" class="nav-links">
+          <li>
+            <a href="#top" data-page="top" class="nav-link">トップ</a>
+          </li>
+          <li>
+            <a href="#about" data-page="about" class="nav-link">紹介</a>
+          </li>
+          <li>
+            <a href="#contact" data-page="contact" class="nav-link">問い合わせ</a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="main-content max-w-[42rem] mx-auto px-4 py-12 min-h-[calc(100vh-160px)]">
+      <section id="page-top" class="page-content hidden" aria-labelledby="top-title">
+        <h1 id="top-title" class="text-2xl sm:text-3xl font-bold mb-6 border-b-2 border-slate-800 pb-2">
+          地域に根ざした、安心の法律相談
+        </h1>
+        <p class="mb-6 text-base">
+          地域サンプル法律事務所は、皆様の身近なトラブルや不安を解決するために、誠実かつ丁寧に対応いたします。
+        </p>
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+          <h2 class="text-xl font-semibold mb-4 text-slate-700">主な取り扱い分野</h2>
+          <ul class="list-disc list-inside space-y-2">
+            <li>相続・遺言</li>
+            <li>離婚・男女問題</li>
+            <li>交通事故</li>
+            <li>債務整理</li>
+          </ul>
+        </div>
+        <div class="text-center">
+          <a
+            href="#about"
+            class="inline-block bg-slate-800 text-white px-8 py-3 rounded-md hover:bg-slate-700 transition-colors"
+          >
+            当事務所について詳しく
+          </a>
+        </div>
+      </section>
+
+      <section id="page-about" class="page-content hidden" aria-labelledby="about-title">
+        <h1 id="about-title" class="text-2xl sm:text-3xl font-bold mb-6 border-b-2 border-slate-800 pb-2">
+          私たちの想いと特徴
+        </h1>
+        <div class="space-y-8">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-semibold mb-3 text-slate-700">1. 徹底した寄り添い</h2>
+            <p>
+              法律の専門家としてだけでなく、一人の人間としてお客様の心に寄り添い、最善の解決策を共に考えます。
+            </p>
+          </div>
+          <div>
+            <h2 class="text-xl sm:text-2xl font-semibold mb-3 text-slate-700">2. 明快な料金体系</h2>
+            <p>
+              ご依頼前に費用を明確にご提示し、納得いただいた上で着手いたします。不透明な追加費用は発生しません。
+            </p>
+          </div>
+          <div>
+            <h2 class="text-xl sm:text-2xl font-semibold mb-3 text-slate-700">3. 迅速な対応</h2>
+            <p>
+              トラブルの早期解決は、お客様の心の平穏に直結します。可能な限り迅速なレスポンスを心がけています。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-contact" class="page-content hidden" aria-labelledby="contact-title">
+        <h1 id="contact-title" class="text-2xl sm:text-3xl font-bold mb-6 border-b-2 border-slate-800 pb-2">
+          お問い合わせ
+        </h1>
+
+        <div id="contact-form-container">
+          <p class="mb-8 text-base">
+            ご相談の予約や、費用に関するお問い合わせはこちらのフォームよりお願いいたします。
+          </p>
+          <form id="contact-form" class="space-y-6" novalidate>
+            <div>
+              <label for="name" class="form-label">
+                氏名 <span class="text-red-500" aria-hidden="true">*</span>
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                class="form-input"
+                autocomplete="name"
+                placeholder="山田 太郎"
+              />
+              <p id="error-name" class="form-error hidden" role="alert">氏名を入力してください。</p>
+            </div>
+            <div>
+              <label for="email" class="form-label">
+                メールアドレス <span class="text-red-500" aria-hidden="true">*</span>
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-input"
+                autocomplete="email"
+                placeholder="example@mail.com"
+              />
+              <p id="error-email" class="form-error hidden" role="alert">
+                メールアドレスを入力してください。
+              </p>
+            </div>
+            <div>
+              <label for="message" class="form-label">
+                お問い合わせ内容 <span class="text-red-500" aria-hidden="true">*</span>
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                rows="5"
+                class="form-input"
+                placeholder="ご相談内容を詳しくご記入ください。"
+              ></textarea>
+              <p id="error-message" class="form-error hidden" role="alert">
+                お問い合わせ内容を入力してください。
+              </p>
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-slate-800 text-white font-bold py-3 rounded-md hover:bg-slate-700 transition-colors text-base"
+            >
+              送信する
+            </button>
+          </form>
+        </div>
+
+        <div id="contact-success" class="hidden text-center py-12" role="status" aria-live="polite">
+          <div class="text-5xl mb-4 text-green-600" aria-hidden="true">✓</div>
+          <h2 class="text-2xl font-bold mb-4">送信が完了しました</h2>
+          <p class="mb-8 text-gray-600 text-base">
+            お問い合わせありがとうございます。内容を確認の上、担当者より折り返しご連絡いたします。
+          </p>
+          <a
+            href="#top"
+            class="inline-block border border-slate-800 text-slate-800 px-6 py-2 rounded-md hover:bg-slate-50 transition-colors"
+          >
+            トップへ戻る
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-slate-800 text-white py-8 mt-12">
+      <div class="max-w-4xl mx-auto px-4 text-center text-base">
+        <p>&copy; 2026 地域サンプル法律事務所</p>
+      </div>
+    </footer>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>じゃんけんゲーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
+    <h1 class="text-3xl font-bold mb-8">じゃんけんゲーム</h1>
+
+    <!-- 手選択エリア -->
+    <div id="select-area" class="flex gap-4">
+      <button
+        class="px-4 py-2 bg-white shadow rounded text-xl"
+        onclick="play('グー')"
+      >
+        ✊ グー
+      </button>
+      <button
+        class="px-4 py-2 bg-white shadow rounded text-xl"
+        onclick="play('チョキ')"
+      >
+        ✌️ チョキ
+      </button>
+      <button
+        class="px-4 py-2 bg-white shadow rounded text-xl"
+        onclick="play('パー')"
+      >
+        ✋ パー
+      </button>
+    </div>
+
+    <!-- 結果エリア -->
+    <div id="result-area" class="hidden flex flex-col items-center gap-4 mt-6">
+      <div id="hands" class="text-xl"></div>
+      <div id="judge" class="text-2xl font-bold"></div>
+      <button
+        id="retry"
+        class="px-4 py-2 bg-blue-500 text-white rounded"
+        onclick="resetGame()"
+      >
+        再戦
+      </button>
+    </div>
+
+    <script>
+      const emojiMap = {
+        グー: "✊",
+        チョキ: "✌️",
+        パー: "✋",
+      };
+
+      function play(playerHand) {
+        const cpuHands = ["グー", "チョキ", "パー"];
+        const cpuHand = cpuHands[Math.floor(Math.random() * cpuHands.length)];
+
+        const result = judge(playerHand, cpuHand);
+
+        document.getElementById("select-area").classList.add("hidden");
+        document.getElementById("result-area").classList.remove("hidden");
+
+        document.getElementById("hands").textContent =
+          `${emojiMap[playerHand]} ${playerHand}　vs　${emojiMap[cpuHand]} ${cpuHand}`;
+
+        document.getElementById("judge").textContent = result;
+      }
+
+      function judge(player, cpu) {
+        if (player === cpu) return "あいこ";
+
+        if (
+          (player === "グー" && cpu === "チョキ") ||
+          (player === "チョキ" && cpu === "パー") ||
+          (player === "パー" && cpu === "グー")
+        ) {
+          return "勝ち";
+        }
+        return "負け";
+      }
+
+      function resetGame() {
+        document.getElementById("result-area").classList.add("hidden");
+        document.getElementById("select-area").classList.remove("hidden");
+        document.getElementById("judge").textContent = "";
+        document.getElementById("hands").textContent = "";
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HTML からタイトル・URL 抽出</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d9cf0;
+      --accent-dim: #2a7fc4;
+      --success: #3ecf8e;
+      --radius: 10px;
+      --font: "IBM Plex Sans JP", "Hiragino Sans", "Yu Gothic UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      padding: clamp(1rem, 3vw, 2rem);
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0 0 1.25rem;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      font-family: ui-monospace, "Cascadia Code", monospace;
+      font-size: 0.8rem;
+      resize: vertical;
+    }
+    textarea:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem 1rem;
+      align-items: center;
+      margin: 0.85rem 0 1rem;
+    }
+    .toolbar label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin: 0;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+    .toolbar input[type="checkbox"] {
+      accent-color: var(--accent);
+    }
+    button, .file-btn {
+      font: inherit;
+      font-size: 0.88rem;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+    }
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent-dim);
+      color: #fff;
+      font-weight: 600;
+    }
+    button.primary:hover { filter: brightness(1.08); }
+    button.secondary:hover, .file-btn:hover { background: #243044; }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .file-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .file-btn input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .stats {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .stats strong { color: var(--success); }
+    .table-wrap {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: auto;
+      max-height: min(60vh, 520px);
+      background: var(--surface);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    th, td {
+      padding: 0.55rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: #243044;
+      color: var(--muted);
+      font-weight: 600;
+      z-index: 1;
+    }
+    tr:last-child td { border-bottom: none; }
+    td.num { color: var(--muted); width: 2.5rem; font-variant-numeric: tabular-nums; }
+    td.title { word-break: break-word; max-width: 280px; }
+    td.url a {
+      color: var(--accent);
+      word-break: break-all;
+    }
+    .empty {
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+    }
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      background: #243044;
+      border: 1px solid var(--border);
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 10;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .source-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 0.12rem 0.4rem;
+      border-radius: 4px;
+      background: #2d3a4d;
+      color: var(--muted);
+      margin-left: 0.35rem;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>HTML からタイトル・URL を一覧化</h1>
+    <p class="lead">
+      ページのソースや保存した HTML を貼り付けてください。ブラウザ内だけで処理し、サーバーには送りません。
+    </p>
+
+    <label for="html-input">HTML</label>
+    <textarea id="html-input" placeholder="&lt;html&gt;... または一部の断片でも可"></textarea>
+
+    <div class="toolbar">
+      <button type="button" class="primary" id="btn-extract">抽出する</button>
+      <label class="file-btn secondary">
+        ファイルから読み込み
+        <input type="file" id="file-input" accept=".html,.htm,text/html" />
+      </label>
+      <label><input type="checkbox" id="opt-http-only" checked /> http(s) のみ</label>
+      <label><input type="checkbox" id="opt-dedupe" checked /> URL で重複除去</label>
+      <label><input type="checkbox" id="opt-meta" checked /> meta / canonical も拾う</label>
+    </div>
+
+    <div class="toolbar">
+      <button type="button" id="btn-copy-tsv" disabled>TSV をコピー</button>
+      <button type="button" id="btn-copy-md" disabled>Markdown リストをコピー</button>
+      <button type="button" id="btn-copy-urls" disabled>URL のみコピー</button>
+    </div>
+
+    <p class="stats" id="stats">まだ抽出していません。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>タイトル</th>
+            <th>URL</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="3" class="empty">ここに結果が表示されます</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      const $ = (id) => document.getElementById(id);
+      const htmlInput = $("html-input");
+      const btnExtract = $("btn-extract");
+      const fileInput = $("file-input");
+      const optHttpOnly = $("opt-http-only");
+      const optDedupe = $("opt-dedupe");
+      const optMeta = $("opt-meta");
+      const tbody = $("tbody");
+      const stats = $("stats");
+      const btnCopyTsv = $("btn-copy-tsv");
+      const btnCopyMd = $("btn-copy-md");
+      const btnCopyUrls = $("btn-copy-urls");
+      const toast = $("toast");
+
+      /** @type {{ title: string, url: string, source?: string }[]} */
+      let lastRows = [];
+
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+
+      function normalizeTitle(s) {
+        return s.replace(/\s+/g, " ").trim();
+      }
+
+      function isHttpUrl(href) {
+        try {
+          const u = new URL(href);
+          return u.protocol === "http:" || u.protocol === "https:";
+        } catch {
+          return false;
+        }
+      }
+
+      /**
+       * @param {string} html
+       * @returns {{ title: string, url: string, source: string }[]}
+       */
+      function extractFromHtml(html) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        /** @type {{ title: string, url: string, source: string }[]} */
+        const out = [];
+
+        if (optMeta.checked) {
+          const ogTitle = doc.querySelector('meta[property="og:title"]');
+          const ogUrl = doc.querySelector('meta[property="og:url"]');
+          const twTitle = doc.querySelector('meta[name="twitter:title"]');
+          const canonical = doc.querySelector('link[rel="canonical"]');
+          const titleEl = doc.querySelector("title");
+
+          if (ogUrl && ogUrl.getAttribute("content")) {
+            const u = ogUrl.getAttribute("content").trim();
+            const t =
+              (ogTitle && ogTitle.getAttribute("content")?.trim()) ||
+              (twTitle && twTitle.getAttribute("content")?.trim()) ||
+              (titleEl && normalizeTitle(titleEl.textContent)) ||
+              "(無題)";
+            out.push({ title: t, url: u, source: "og:url" });
+          }
+
+          if (canonical && canonical.getAttribute("href")) {
+            const href = canonical.getAttribute("href").trim();
+            const t =
+              (ogTitle && ogTitle.getAttribute("content")?.trim()) ||
+              (twTitle && twTitle.getAttribute("content")?.trim()) ||
+              (titleEl && normalizeTitle(titleEl.textContent)) ||
+              "(無題)";
+            out.push({ title: t + " (canonical)", url: href, source: "canonical" });
+          }
+        }
+
+        function resolveAnchorUrl(href) {
+          const h = (href || "").trim();
+          if (!h || h === "#" || h.startsWith("#")) return null;
+          if (/^(javascript:|mailto:|tel:|data:)/i.test(h)) return null;
+          try {
+            if (/^https?:\/\//i.test(h)) return new URL(h).href;
+            const baseEl = doc.querySelector("base[href]");
+            if (baseEl) return new URL(h, baseEl.href).href;
+            return h;
+          } catch {
+            return h;
+          }
+        }
+
+        doc.querySelectorAll("a[href]").forEach((a) => {
+          const href = a.getAttribute("href");
+          const abs = resolveAnchorUrl(href);
+          if (abs == null) return;
+          const title = normalizeTitle(a.textContent) || "(リンクテキストなし)";
+          out.push({ title, url: abs, source: "<a>" });
+        });
+
+        return out;
+      }
+
+      function filterAndDedupe(rows) {
+        let r = rows.slice();
+        if (optHttpOnly.checked) {
+          r = r.filter((x) => isHttpUrl(x.url));
+        }
+        if (optDedupe.checked) {
+          const seen = new Set();
+          r = r.filter((x) => {
+            const key = x.url.split("#")[0];
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+        }
+        return r;
+      }
+
+      function render(rows) {
+        lastRows = rows;
+        if (!rows.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="3" class="empty">該当するリンクがありません。オプションを変えて再試行してください。</td></tr>';
+          stats.textContent = "0 件";
+          btnCopyTsv.disabled = btnCopyMd.disabled = btnCopyUrls.disabled = true;
+          return;
+        }
+        tbody.innerHTML = rows
+          .map(
+            (row, i) =>
+              `<tr>
+                <td class="num">${i + 1}</td>
+                <td class="title">${escapeHtml(row.title)}${
+                  row.source ? `<span class="source-tag">${escapeHtml(row.source)}</span>` : ""
+                }</td>
+                <td class="url"><a href="${escapeAttr(row.url)}" target="_blank" rel="noopener">${escapeHtml(
+                  row.url
+                )}</a></td>
+              </tr>`
+          )
+          .join("");
+        stats.innerHTML = `<strong>${rows.length}</strong> 件を表示しています。`;
+        btnCopyTsv.disabled = btnCopyMd.disabled = btnCopyUrls.disabled = false;
+      }
+
+      function escapeHtml(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+      function escapeAttr(s) {
+        return escapeHtml(s).replace(/'/g, "&#39;");
+      }
+
+      function runExtract() {
+        const raw = htmlInput.value;
+        if (!raw.trim()) {
+          showToast("HTML を入力してください");
+          return;
+        }
+        const merged = extractFromHtml(raw);
+        const filtered = filterAndDedupe(merged);
+        render(filtered);
+        showToast(`抽出完了（${filtered.length} 件）`);
+      }
+
+      btnExtract.addEventListener("click", runExtract);
+
+      fileInput.addEventListener("change", () => {
+        const f = fileInput.files && fileInput.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          htmlInput.value = String(reader.result || "");
+          runExtract();
+          fileInput.value = "";
+        };
+        reader.readAsText(f, "UTF-8");
+      });
+
+      async function copyText(text, okMsg) {
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast(okMsg);
+        } catch {
+          showToast("コピーに失敗しました（ブラウザの権限を確認）");
+        }
+      }
+
+      btnCopyTsv.addEventListener("click", () => {
+        const lines = ["タイトル\tURL"].concat(lastRows.map((r) => `${r.title.replace(/\t/g, " ")}\t${r.url}`));
+        copyText(lines.join("\n"), "TSV をコピーしました");
+      });
+
+      btnCopyMd.addEventListener("click", () => {
+        const lines = lastRows.map((r) => `- [${r.title.replace(/]/g, "\\]")}](${r.url})`);
+        copyText(lines.join("\n"), "Markdown をコピーしました");
+      });
+
+      btnCopyUrls.addEventListener("click", () => {
+        copyText(lastRows.map((r) => r.url).join("\n"), "URL をコピーしました");
+      });
+    })();
+  </script>
+</body>
+</html>

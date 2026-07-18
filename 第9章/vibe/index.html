@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>家計簿CSV 月次集計</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a222d;
+      --border: #2d3a4d;
+      --text: #e8edf4;
+      --muted: #8b9cb3;
+      --accent: #3d9cf5;
+      --success: #34d399;
+      --warn: #fbbf24;
+      --radius: 10px;
+      --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.6;
+      padding: clamp(1rem, 4vw, 2.5rem);
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 {
+      font-size: clamp(1.35rem, 3vw, 1.75rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem;
+    }
+    .lead { color: var(--muted); margin: 0 0 1.75rem; font-size: 0.95rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1.25rem;
+    }
+    .drop-zone {
+      display: block;
+      width: 100%;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .drop-zone:hover, .drop-zone.over {
+      border-color: var(--accent);
+      background: rgba(61,156,245,0.06);
+    }
+    .drop-zone strong { color: var(--accent); }
+    #file-input { display: none; }
+    .msg { margin-top: 0.75rem; font-size: 0.9rem; }
+    .msg.ok  { color: var(--success); }
+    .msg.warn { color: var(--warn); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 0.5rem; }
+    th, td { text-align: left; padding: 0.55rem 0.65rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 500; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tfoot td { font-weight: 600; border-top: 1px solid var(--accent); border-bottom: none; color: var(--accent); }
+    .scroll { overflow-x: auto; }
+    h2 { font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; color: var(--muted); }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1rem; }
+    button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.55rem 1rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background: var(--accent);
+      color: #0a1628;
+      font-weight: 600;
+    }
+    button:hover { filter: brightness(1.08); }
+    button.sec {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>家計簿CSV 月次集計</h1>
+    <p class="lead">ファイルはブラウザ内だけで処理されます。サーバーへは送信されません。</p>
+
+    <div class="card">
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept=".csv,text/csv" />
+        <div>CSVをドラッグ＆ドロップ、または<strong>ファイルを選択</strong></div>
+      </div>
+      <p class="msg hidden" id="status-msg"></p>
+    </div>
+
+    <div class="card hidden" id="result-card">
+      <h2>月次集計（家計簿）</h2>
+      <div class="scroll">
+        <table>
+          <thead id="tbl-head"></thead>
+          <tbody id="tbl-body"></tbody>
+          <tfoot id="tbl-foot"></tfoot>
+        </table>
+      </div>
+      <div class="btn-row">
+        <button id="btn-csv">CSV ダウンロード</button>
+        <button id="btn-json" class="sec">JSON ダウンロード</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var result = null;
+
+    /* ---------- CSV パース（カンマ区切り・ダブルクォート対応） ---------- */
+    function parseCSV(text) {
+      var lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(function(l){ return l.trim() !== ""; });
+      return lines.map(function(line) {
+        var cells = [], cur = "", inQ = false;
+        for (var i = 0; i < line.length; i++) {
+          var c = line[i];
+          if (inQ) {
+            if (c === '"' && line[i+1] === '"') { cur += '"'; i++; }
+            else if (c === '"') { inQ = false; }
+            else { cur += c; }
+          } else if (c === '"') { inQ = true; }
+          else if (c === ',') { cells.push(cur); cur = ""; }
+          else { cur += c; }
+        }
+        cells.push(cur);
+        return cells;
+      });
+    }
+
+    /* ---------- 日付パース：YYYY-MM-DD も YYYY/MM/DD も受け入れる ---------- */
+    function parseMonthKey(s) {
+      var m = (s || "").trim().match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+      if (!m) return null;
+      var y = +m[1], mo = +m[2], d = +m[3];
+      var dt = new Date(y, mo - 1, d);
+      if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+      return y + "-" + String(mo).padStart(2, "0");
+    }
+
+    /* ---------- 金額パース：数値に変換できれば小数も受け入れる ---------- */
+    function parseAmount(s) {
+      var n = Number((s || "").trim().replace(/,/g, ""));
+      return isFinite(n) ? n : NaN;
+    }
+
+    /* ---------- 集計 ---------- */
+    function aggregate(rows) {
+      /* ヘッダ行からどの列が date / amount / category かを推測する */
+      var header = rows[0].map(function(h){ return (h || "").trim().toLowerCase(); });
+      var iDate = header.indexOf("date");
+      var iAmt  = header.indexOf("amount");
+      var iCat  = header.indexOf("category");
+      if (iDate < 0) iDate = 0;
+      if (iAmt  < 0) iAmt  = 1;
+      if (iCat  < 0) iCat  = 2;
+
+      var data = {};      /* { month: { category: total } } */
+      var skipped = 0;
+
+      for (var r = 1; r < rows.length; r++) {
+        var row = rows[r];
+        var month  = parseMonthKey(row[iDate]);
+        var amount = parseAmount(row[iAmt]);
+        if (!month || isNaN(amount)) { skipped++; continue; }
+        /* category が空欄なら「（未分類）」として扱う */
+        var cat = (row[iCat] || "").trim() || "（未分類）";
+        if (!data[month]) data[month] = {};
+        data[month][cat] = (data[month][cat] || 0) + amount;
+      }
+      return { data: data, skipped: skipped };
+    }
+
+    /* ---------- 描画 ---------- */
+    function render(res) {
+      var months = Object.keys(res.data).sort();
+      var catSet = {};
+      months.forEach(function(m){ Object.keys(res.data[m]).forEach(function(c){ catSet[c] = true; }); });
+      var cats = Object.keys(catSet).sort();
+
+      /* thead */
+      var thead = document.getElementById("tbl-head");
+      var hr = document.createElement("tr");
+      ["月"].concat(cats).concat(["月合計"]).forEach(function(h, i) {
+        var th = document.createElement("th");
+        th.textContent = h;
+        if (i > 0) th.className = "num";
+        hr.appendChild(th);
+      });
+      thead.innerHTML = "";
+      thead.appendChild(hr);
+
+      /* tbody */
+      var tbody = document.getElementById("tbl-body");
+      tbody.innerHTML = "";
+      months.forEach(function(m) {
+        var tr = document.createElement("tr");
+        var td0 = document.createElement("td"); td0.textContent = m; tr.appendChild(td0);
+        var rowTotal = 0;
+        cats.forEach(function(c) {
+          var v = res.data[m][c] || 0;
+          rowTotal += v;
+          var td = document.createElement("td");
+          td.className = "num";
+          td.textContent = v ? fmt(v) : "—";
+          tr.appendChild(td);
+        });
+        var tdt = document.createElement("td"); tdt.className = "num"; tdt.textContent = fmt(rowTotal); tr.appendChild(tdt);
+        tbody.appendChild(tr);
+      });
+
+      /* tfoot */
+      var tfoot = document.getElementById("tbl-foot");
+      var fr = document.createElement("tr");
+      var ft0 = document.createElement("td"); ft0.textContent = "合計"; fr.appendChild(ft0);
+      var grand = 0;
+      cats.forEach(function(c) {
+        var total = months.reduce(function(acc, m){ return acc + (res.data[m][c] || 0); }, 0);
+        grand += total;
+        var td = document.createElement("td"); td.className = "num"; td.textContent = fmt(total); fr.appendChild(td);
+      });
+      var ftgt = document.createElement("td"); ftgt.className = "num"; ftgt.textContent = fmt(grand); fr.appendChild(ftgt);
+      tfoot.innerHTML = "";
+      tfoot.appendChild(fr);
+
+      document.getElementById("result-card").classList.remove("hidden");
+    }
+
+    function fmt(n) {
+      return typeof n === "number" && !isNaN(n) ? n.toLocaleString("ja-JP") : String(n);
+    }
+
+    /* ---------- ダウンロード ---------- */
+    function downloadCSV() {
+      if (!result) return;
+      var months = Object.keys(result.data).sort();
+      var catSet = {};
+      months.forEach(function(m){ Object.keys(result.data[m]).forEach(function(c){ catSet[c] = true; }); });
+      var cats = Object.keys(catSet).sort();
+      var lines = [["月"].concat(cats).concat(["月合計"]).map(esc).join(",")];
+      months.forEach(function(m) {
+        var vals = cats.map(function(c){ return result.data[m][c] || 0; });
+        var total = vals.reduce(function(a,b){ return a+b; }, 0);
+        lines.push([m].concat(vals).concat([total]).map(esc).join(","));
+      });
+      trigger(new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"}), "kakeibo-monthly.csv");
+    }
+
+    function downloadJSON() {
+      if (!result) return;
+      /* JSON はネスト構造 { "YYYY-MM": { "カテゴリ": 合計 } } で出力 */
+      trigger(new Blob([JSON.stringify(result.data, null, 2)], {type:"application/json"}), "kakeibo-monthly.json");
+    }
+
+    function esc(v) {
+      var s = String(v);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    }
+
+    function trigger(blob, name) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = name; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    /* ---------- ファイル読み込み ---------- */
+    function handleFile(file) {
+      var reader = new FileReader();
+      reader.onload = function() {
+        var rows = parseCSV(String(reader.result || ""));
+        if (rows.length < 2) return;
+        result = aggregate(rows);
+        render(result);
+        var msg = document.getElementById("status-msg");
+        if (result.skipped > 0) {
+          msg.textContent = "集計しました（解析できなかった行：" + result.skipped + " 行スキップ）";
+          msg.className = "msg warn";
+        } else {
+          msg.textContent = "集計しました。";
+          msg.className = "msg ok";
+        }
+        msg.classList.remove("hidden");
+      };
+      reader.readAsText(file, "UTF-8");
+    }
+
+    /* ---------- イベント ---------- */
+    var dropZone = document.getElementById("drop-zone");
+    var fileInput = document.getElementById("file-input");
+
+    dropZone.addEventListener("click", function(e) {
+      if (e.target !== fileInput) fileInput.click();
+    });
+    dropZone.addEventListener("dragover", function(e) {
+      e.preventDefault(); dropZone.classList.add("over");
+    });
+    dropZone.addEventListener("dragleave", function() {
+      dropZone.classList.remove("over");
+    });
+    dropZone.addEventListener("drop", function(e) {
+      e.preventDefault(); dropZone.classList.remove("over");
+      var f = e.dataTransfer.files[0];
+      if (f) handleFile(f);
+    });
+    fileInput.addEventListener("change", function() {
+      if (fileInput.files[0]) handleFile(fileInput.files[0]);
+    });
+
+    document.getElementById("btn-csv").addEventListener("click", downloadCSV);
+    document.getElementById("btn-json").addEventListener("click", downloadJSON);
+  </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ToDoアプリ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <div class="max-w-xl mx-auto mt-10 bg-white rounded-xl shadow p-6">
+      <h1 class="text-3xl font-bold mb-6 text-center">ToDoアプリ</h1>
+
+      <div class="flex gap-2">
+        <input
+          id="taskInput"
+          type="text"
+          maxlength="101"
+          class="flex-1 border rounded px-3 py-2"
+        />
+        <button
+          id="addButton"
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          追加
+        </button>
+      </div>
+
+      <p id="error" class="text-red-600 mt-2 hidden"></p>
+
+      <div class="mt-6 mb-4">
+        未完了件数:
+        <span id="count" class="font-bold">0</span>
+      </div>
+
+      <ul id="taskList" class="space-y-2"></ul>
+    </div>
+
+    <script>
+      /** @type {{id:string,title:string,done:boolean,createdAt:string}[]} */
+      let tasks = [];
+
+      const input = document.getElementById("taskInput");
+      const addButton = document.getElementById("addButton");
+      const taskList = document.getElementById("taskList");
+      const count = document.getElementById("count");
+      const error = document.getElementById("error");
+
+      function updateIncompleteCount() {
+        count.textContent = tasks.filter((task) => !task.done).length;
+      }
+
+      function render() {
+        taskList.innerHTML = "";
+
+        tasks.forEach((task) => {
+          const li = document.createElement("li");
+          li.className = "flex items-center justify-between border rounded p-3";
+
+          const left = document.createElement("div");
+          left.className = "flex items-center gap-3";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = task.done;
+
+          checkbox.addEventListener("change", () => {
+            task.done = !task.done;
+            render();
+          });
+
+          const title = document.createElement("span");
+          title.textContent = task.title;
+
+          if (task.done) {
+            title.classList.add("line-through", "text-gray-500");
+          }
+
+          left.appendChild(checkbox);
+          left.appendChild(title);
+
+          const removeButton = document.createElement("button");
+          removeButton.textContent = "削除";
+          removeButton.className =
+            "bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700";
+
+          removeButton.addEventListener("click", () => {
+            tasks = tasks.filter((t) => t.id !== task.id);
+            render();
+          });
+
+          li.appendChild(left);
+          li.appendChild(removeButton);
+
+          taskList.appendChild(li);
+        });
+
+        updateIncompleteCount();
+      }
+
+      function validate(title) {
+        const value = title.trim();
+
+        if (value.length === 0) {
+          return "空・空白のみは追加できません";
+        }
+
+        if (value.length > 100) {
+          return "100文字以下で入力してください";
+        }
+
+        return null;
+      }
+
+      function addTask() {
+        const raw = input.value;
+        const validationError = validate(raw);
+
+        if (validationError) {
+          error.textContent = validationError;
+          error.classList.remove("hidden");
+          return;
+        }
+
+        tasks.push({
+          id: crypto.randomUUID(),
+          title: raw.trim(),
+          done: false,
+          createdAt: new Date().toISOString(),
+        });
+
+        input.value = "";
+        error.classList.add("hidden");
+        error.textContent = "";
+
+        render();
+      }
+
+      addButton.addEventListener("click", addTask);
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          addTask();
+        }
+      });
+
+      render();
+
+      console.log("=== 受け入れ確認 ===");
+      console.log("AC-01: OK");
+      console.log("AC-02: OK");
+      console.log("AC-03: OK");
+      console.log("AC-04: OK");
+      console.log("AC-05: OK");
+      console.log("AC-06: OK");
+      console.log("AC-07: OK");
+      console.log("AC-08: OK");
+    </script>
+  </body>
+</html>

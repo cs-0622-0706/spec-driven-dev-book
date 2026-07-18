@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>保護画面 | 第8章</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./app.js"></script>
+    <script>
+      if (!window.Chapter8Auth.requireAuth("index.html")) {
+        /* redirecting */
+      }
+    </script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 min-h-screen">
+    <main class="max-w-lg mx-auto p-6">
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+        <div class="flex items-start justify-between gap-4">
+          <h1 class="text-2xl font-semibold text-slate-900">保護画面</h1>
+          <button
+            type="button"
+            id="logout-btn"
+            class="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-200"
+          >
+            ログアウト
+          </button>
+        </div>
+        <p class="mt-4 text-slate-700">
+          この文言はログイン後にのみ表示される保護情報です。未ログインの直アクセスやログアウト後の戻る操作では表示されません。
+        </p>
+      </section>
+    </main>
+    <script>
+      document.getElementById("logout-btn").addEventListener("click", function () {
+        window.Chapter8Auth.logout();
+        window.location.replace("index.html");
+      });
+    </script>
+  </body>
+</html>

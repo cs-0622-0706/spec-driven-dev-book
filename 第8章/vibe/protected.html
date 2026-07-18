@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>保護ページ | Sample8</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <div class="card card--wide">
+        <div class="topbar">
+          <h1>保護ページ</h1>
+          <button type="button" class="btn btn--ghost" id="logout-btn">
+            ログアウト
+          </button>
+        </div>
+        <div class="content">
+          <p>ようこそ！ここはログインした人だけが見られるページです。</p>
+          <p>
+            別の保護ページの例:
+            <a href="protected-extra.html">追加の保護ページ</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    <script src="js/auth.js"></script>
+    <script>
+      document.getElementById("logout-btn").addEventListener("click", function () {
+        window.Sample8Auth.setLoggedIn(false);
+        window.location.replace("index.html");
+      });
+    </script>
+  </body>
+</html>
